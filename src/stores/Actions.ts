@@ -88,3 +88,33 @@ export function setActivePage(index: number) {
     editorState.activeAssistant = 'none'
   }
 }
+
+export function startDrag(nodeId: string, mouseX: number, mouseY: number) {
+  const node = currentPage.value?.components.find((c) => c.id === nodeId)
+  if (!node) return
+
+  editorState.dragState.isDragging = true
+  editorState.dragState.targetId = nodeId
+  editorState.dragState.startMouseX = mouseX
+  editorState.dragState.startMouseY = mouseY
+  editorState.dragState.startX = node.x
+  editorState.dragState.startY = node.y
+}
+
+export function dragTo(mouseX: number, mouseY: number) {
+  if (!editorState.dragState.isDragging) return
+
+  const node = currentPage.value?.components.find((c) => c.id === editorState.dragState.targetId)
+  if (!node) return
+
+  const dx = mouseX - editorState.dragState.startMouseX
+  const dy = mouseY - editorState.dragState.startMouseY
+
+  node.x = editorState.dragState.startX + dx
+  node.y = editorState.dragState.startY + dy
+}
+
+export function stopDrag() {
+  editorState.dragState.isDragging = false
+  editorState.dragState.targetId = null
+}
