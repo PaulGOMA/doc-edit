@@ -1,7 +1,7 @@
 import type { ComponentNode } from '../models/ComponentNode'
 import type { ComponentType } from '../models/ComponentType'
 import { createTextNode } from '../models/TextNode'
-import { currentPage, selectedComponent } from './selectors'
+import { currentPage, selectedComponent } from './Selectors'
 import { editorState } from './State'
 
 /**

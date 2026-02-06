@@ -1,6 +1,6 @@
 import { editorState } from './State'
-import * as selectors from './selectors'
 import * as actions from './Actions'
+import * as selectors from './Selectors'
 
 /**
  * Editor Store – Public API
