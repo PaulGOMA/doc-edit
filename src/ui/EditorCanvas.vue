@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ComponentNode } from '../models/ComponentNode'
+import type { WidgetModel } from '../core/models/WidgetModel'
 import { editorStore } from '../stores'
 import TextComponent from './Components/TextComponent.vue'
 
@@ -18,7 +18,7 @@ const { currentPage, selectComponent } = editorStore
     >
       <!-- Render all components -->
       <component
-        v-for="node in currentPage.components"
+        v-for="node in currentPage.widgets"
         :key="node.id"
         :is="resolveComponent(node)"
         :node="node as any"
@@ -29,7 +29,7 @@ const { currentPage, selectComponent } = editorStore
 </template>
 
 <script lang="ts">
-function resolveComponent(node: ComponentNode) {
+function resolveComponent(node: WidgetModel) {
   switch (node.type) {
     case 'text':
       return TextComponent

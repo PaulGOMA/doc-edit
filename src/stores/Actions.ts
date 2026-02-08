@@ -1,27 +1,19 @@
-import type { ComponentNode } from '../models/ComponentNode'
-import type { ComponentType } from '../models/ComponentType'
-import { createTextNode } from '../models/TextNode'
+import type { WidgetModel, WidgetType } from '../core/models/WidgetModel'
 import { currentPage, selectedComponent } from './Selectors'
 import { editorState } from './State'
+import { WidgetFactory } from '../core/node_factory/WidgetFactory'
 
 /**
- * Creates and adds a new component to the current page.
+ * Creates and adds a new widget to the current page.
  */
-export function addComponent(type: ComponentType) {
-  let node: ComponentNode | null = null
+export function addWidget(type: WidgetType) {
+  const create = WidgetFactory[type]
+  if (!create) throw new Error(`Unknown widget type: ${type}`)
 
-  switch (type) {
-    case 'text':
-      node = createTextNode()
-      break
+  const widget = create() // ← NOUVEAU widget à chaque appel
 
-    default:
-      console.warn(`Unsupported component type: ${type}`)
-      return
-  }
-
-  currentPage.value?.components.push(node)
-  editorState.selectedComponentId = node.id
+  currentPage.value?.widgets.push(widget)
+  editorState.selectedComponentId = widget.id
   editorState.activeAssistant = 'edit'
 }
 
@@ -37,7 +29,7 @@ export function selectComponent(id: string) {
  * Updates the props of a component.
  */
 export function updateComponentProps(id: string, props: Record<string, unknown>) {
-  const node = currentPage.value?.components.find((c) => c.id === id)
+  const node = currentPage.value?.widgets.find((w) => w.id === id)
   if (node) Object.assign(node.props, props)
 }
 
@@ -46,9 +38,9 @@ export function updateComponentProps(id: string, props: Record<string, unknown>)
  */
 export function updateComponentBounds(
   id: string,
-  bounds: Partial<Pick<ComponentNode, 'x' | 'y' | 'width' | 'height'>>,
+  bounds: Partial<Pick<WidgetModel, 'x' | 'y' | 'width' | 'height'>>,
 ) {
-  const node = currentPage.value?.components.find((c) => c.id === id)
+  const node = currentPage.value?.widgets.find((w) => w.id === id)
   if (node) Object.assign(node, bounds)
 }
 
@@ -61,10 +53,10 @@ export function deleteSelectedComponent() {
 
   if (!selected || !page) return
 
-  const index = page.components.findIndex((c) => c.id === selected.id)
+  const index = page.widgets.findIndex((w) => w.id === selected.id)
 
   if (index !== -1) {
-    page.components.splice(index, 1)
+    page.widgets.splice(index, 1)
   }
 
   editorState.selectedComponentId = null
@@ -90,7 +82,7 @@ export function setActivePage(index: number) {
 }
 
 export function startDrag(nodeId: string, mouseX: number, mouseY: number) {
-  const node = currentPage.value?.components.find((c) => c.id === nodeId)
+  const node = currentPage.value?.widgets.find((w) => w.id === nodeId)
   if (!node) return
 
   editorState.dragState.isDragging = true
@@ -104,7 +96,7 @@ export function startDrag(nodeId: string, mouseX: number, mouseY: number) {
 export function dragTo(mouseX: number, mouseY: number) {
   if (!editorState.dragState.isDragging) return
 
-  const node = currentPage.value?.components.find((c) => c.id === editorState.dragState.targetId)
+  const node = currentPage.value?.widgets.find((w) => w.id === editorState.dragState.targetId)
   if (!node) return
 
   const dx = mouseX - editorState.dragState.startMouseX
@@ -125,7 +117,7 @@ export function startResize(
   mouseX: number,
   mouseY: number,
 ) {
-  const node = currentPage.value?.components.find((c) => c.id === nodeId)
+  const node = currentPage.value?.widgets.find((w) => w.id === nodeId)
   if (!node) return
 
   editorState.resizeState.isResizing = true
@@ -143,7 +135,7 @@ export function resizeTo(mouseX: number, mouseY: number) {
   const rs = editorState.resizeState
   if (!rs.isResizing) return
 
-  const node = currentPage.value?.components.find((c) => c.id === rs.targetId)
+  const node = currentPage.value?.widgets.find((w) => w.id === rs.targetId)
   if (!node) return
 
   const dx = mouseX - rs.startMouseX

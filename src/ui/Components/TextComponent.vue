@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { TextNode } from '../../models/TextNode'
 import { computed, ref, watch } from 'vue'
 import { selectedComponent } from '../../stores/Selectors'
 import {
@@ -12,9 +11,10 @@ import {
   resizeTo,
   updateComponentProps,
 } from '../../stores/Actions'
+import type { TextWidgetModel } from '../../core/models/TextWidgetModel'
 
 const props = defineProps<{
-  node: TextNode
+  node: TextWidgetModel
 }>()
 
 const isSelected = computed(() => props.node.id === selectedComponent.value?.id)

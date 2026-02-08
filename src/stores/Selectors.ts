@@ -12,14 +12,14 @@ export const currentPage = computed(() => {
  * Returns the component currently selected on the active page.
  */
 export const selectedComponent = computed(() => {
-  return currentPage.value?.components.find((c) => c.id === editorState.selectedComponentId) || null
+  return currentPage.value?.widgets.find((w) => w.id === editorState.selectedComponentId) || null
 })
 
 /**
  * Returns all components on the active page.
  */
 export const componentsOnPage = computed(() => {
-  return currentPage.value?.components ?? []
+  return currentPage.value?.widgets ?? []
 })
 
 /**
