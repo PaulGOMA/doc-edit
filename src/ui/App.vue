@@ -5,7 +5,7 @@ import { Button } from 'primevue'
 </script>
 
 <template>
-  <Button label="Ajouter un texte" @click="editorStore.addComponent('text')" />
+  <Button label="Ajouter un texte" @click="editorStore.addWidget('text')" />
 
   <EditorCanvas />
 </template>

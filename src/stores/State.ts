@@ -1,8 +1,8 @@
 import { reactive } from 'vue'
-import { createDocumentModel } from '../models/DocumentModel'
+import { DocumentNode } from '../core/DocumentNode'
 
 export const editorState = reactive({
-  document: createDocumentModel(),
+  document: new DocumentNode().createNode(),
   selectedComponentId: null as string | null,
   activePageIndex: 0,
   activeAssistant: 'none' as 'none' | 'insert' | 'edit',
