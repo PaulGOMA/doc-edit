@@ -118,3 +118,48 @@ export function stopDrag() {
   editorState.dragState.isDragging = false
   editorState.dragState.targetId = null
 }
+
+export function startResize(
+  nodeId: string,
+  direction: 'right' | 'bottom' | 'corner',
+  mouseX: number,
+  mouseY: number,
+) {
+  const node = currentPage.value?.components.find((c) => c.id === nodeId)
+  if (!node) return
+
+  editorState.resizeState.isResizing = true
+  editorState.resizeState.direction = direction
+  editorState.resizeState.targetId = nodeId
+  editorState.resizeState.startMouseX = mouseX
+  editorState.resizeState.startMouseY = mouseY
+  editorState.resizeState.startWidth = node.width
+  editorState.resizeState.startHeight = node.height
+  editorState.resizeState.startX = node.x
+  editorState.resizeState.startY = node.y
+}
+
+export function resizeTo(mouseX: number, mouseY: number) {
+  const rs = editorState.resizeState
+  if (!rs.isResizing) return
+
+  const node = currentPage.value?.components.find((c) => c.id === rs.targetId)
+  if (!node) return
+
+  const dx = mouseX - rs.startMouseX
+  const dy = mouseY - rs.startMouseY
+
+  if (rs.direction === 'right' || rs.direction === 'corner') {
+    node.width = Math.max(20, rs.startWidth + dx)
+  }
+
+  if (rs.direction === 'bottom' || rs.direction === 'corner') {
+    node.height = Math.max(20, rs.startHeight + dy)
+  }
+}
+
+export function stopResize() {
+  editorState.resizeState.isResizing = false
+  editorState.resizeState.direction = null
+  editorState.resizeState.targetId = null
+}
