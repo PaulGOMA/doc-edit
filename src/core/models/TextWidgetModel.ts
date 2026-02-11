@@ -6,10 +6,11 @@ export interface TextWidgetModel extends WidgetModel {
     text: string
     fontSize: number
     fontWeight: 'normal' | 'bold' | 'black' | number
-    fontStyle: 'regular' | 'italic'
+    fontStyle: 'normal' | 'italic'
     fontFamily: string
-    lineHeight: number
+    lineHeight: number | 'normal'
     textAlign: 'left' | 'center' | 'right' | 'justify'
     color: string
+    textDecoration: 'underline' | 'none'
   }
 }

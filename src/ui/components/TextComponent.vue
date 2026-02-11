@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, nextTick, watch } from 'vue'
 import { selectedComponent } from '../../stores/Selectors'
 import {
   dragTo,
@@ -13,37 +13,37 @@ import {
 } from '../../stores/Actions'
 import type { TextWidgetModel } from '../../core/models/TextWidgetModel'
 
-const props = defineProps<{
-  node: TextWidgetModel
-}>()
+const props = defineProps<{ node: TextWidgetModel }>()
 
 const isSelected = computed(() => props.node.id === selectedComponent.value?.id)
+const isEditing = ref(false)
+const editableText = ref(props.node.props.text)
+const elementRef = ref<HTMLElement | null>(null)
 
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const mirrorRef = ref<HTMLDivElement | null>(null)
+/* ---------- DRAG ---------- */
+function onMouseDown(e: MouseEvent) {
+  if (isEditing.value) return
+  selectComponent(props.node.id)
+  startDrag(props.node.id, e.clientX, e.clientY)
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp)
+}
 
 function onMouseMove(e: MouseEvent) {
+  if (isEditing.value) return
   dragTo(e.clientX, e.clientY)
 }
 
 function onMouseUp() {
   stopDrag()
-
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
 }
 
-function onMouseDown(e: MouseEvent) {
-  selectComponent(props.node.id)
-  startDrag(props.node.id, e.clientX, e.clientY)
-
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-}
-
+/* ---------- RESIZE ---------- */
 function onResizeStart(direction: 'right' | 'bottom' | 'corner', e: MouseEvent) {
+  if (isEditing.value) return
   startResize(props.node.id, direction, e.clientX, e.clientY)
-
   window.addEventListener('mousemove', onResizeMove)
   window.addEventListener('mouseup', onResizeEnd)
 }
@@ -58,50 +58,45 @@ function onResizeEnd() {
   window.removeEventListener('mouseup', onResizeEnd)
 }
 
-const isEditing = ref(false)
-
+/* ---------- EDITION ---------- */
 function onDbClick() {
   isEditing.value = true
-}
+  editableText.value = props.node.props.text
 
-const editatableText = ref(props.node.props.text)
-const minWidth = 20
-
-function onEdit() {
-  isEditing.value = false
-  updateComponentProps(props.node.id, {
-    text: editatableText.value,
-    height: textareaRef.value?.scrollHeight || props.node.height,
-    width:
-      mirrorRef.value?.offsetWidth === undefined
-        ? props.node.width
-        : Math.max(minWidth, mirrorRef.value?.offsetWidth + 4),
+  nextTick(() => {
+    const el = elementRef.value as HTMLTextAreaElement
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+      el.focus()
+    }
   })
 }
 
-function autoResize() {
-  const el = textareaRef.value
-  const mirror = mirrorRef.value
-  if (!el || !mirror) return
+function onBlur() {
+  const el = elementRef.value as HTMLTextAreaElement
+  const newHeight = el?.scrollHeight || props.node.height
 
-  // vertical
-  el.style.height = 'auto'
-  el.style.height = el.scrollHeight + 'px'
+  isEditing.value = false
 
-  // horizontal
-  const newWidth = Math.max(minWidth, mirror.offsetWidth + 4)
-  el.style.width = newWidth + 'px'
-
-  // mettre à jour le container en direct
-  props.node.width = newWidth
+  updateComponentProps(props.node.id, {
+    text: editableText.value,
+    height: newHeight,
+  })
 }
 
+function onInputResize() {
+  const el = elementRef.value as HTMLTextAreaElement | null
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
+}
+
+/* ---------- SYNC ---------- */
 watch(
   () => props.node.props.text,
-  (newValue) => {
-    if (!isEditing.value) {
-      editatableText.value = newValue
-    }
+  (v) => {
+    if (!isEditing.value) editableText.value = v
   },
 )
 </script>
@@ -111,43 +106,37 @@ watch(
     class="text-node"
     :class="{ selected: isSelected }"
     @mousedown="onMouseDown"
-    @mousemove="onMouseMove"
-    @mouseup="onMouseUp"
     @dblclick="onDbClick"
     :style="{
       position: 'absolute',
       left: node.x + 'px',
       top: node.y + 'px',
       width: node.width + 'px',
-      height: isEditing ? 'auto' : node.height + 'px',
+      height: node.height + 'px',
       fontSize: node.props.fontSize + 'px',
       fontWeight: node.props.fontWeight,
       fontStyle: node.props.fontStyle,
       fontFamily: node.props.fontFamily,
-      lineHeight: node.props.lineHeight + 'px',
+      lineHeight: 'normal',
       textAlign: node.props.textAlign,
+      textDecoration: node.props.textDecoration,
       color: node.props.color,
-      cursor: 'pointer',
     }"
   >
-    <!-- Edition mode -->
-    <template v-if="isEditing">
-      <textarea
-        v-model="editatableText"
-        @blur="onEdit"
-        class="text-editor"
-        ref="textareaRef"
-        @input="autoResize"
-      >
-      </textarea>
-      <div ref="mirrorRef" class="text-mirror">
-        {{ editatableText }}
-      </div>
-    </template>
+    <textarea
+      v-if="isEditing"
+      ref="elementRef"
+      v-model="editableText"
+      class="text-inner"
+      @input="onInputResize"
+      @blur="onBlur"
+    ></textarea>
 
-    <div v-else>{{ node.props.text }}</div>
+    <div v-else ref="elementRef" class="text-inner">
+      {{ editableText }}
+    </div>
 
-    <!-- Handles for resizing -->
+    <!-- Handles -->
     <div
       v-if="isSelected"
       class="resize-handle right"
@@ -169,17 +158,37 @@ watch(
 </template>
 
 <style scoped>
+/* --- MODE NORMAL --- */
 .text-node {
-  cursor: pointer;
-  border: 1px dashed #888;
-  background: rgba(255, 255, 0, 0.2);
+  border: 1px dashed transparent;
+  background: transparent;
+  box-sizing: border-box;
 }
 
-.selected {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
+/* --- MODE ÉDITION (englobe handles + texte) --- */
+.text-node.selected {
+  border: 2px dashed #3b82f6;
+  background: rgba(255, 255, 0, 0.15);
+  border-radius: 4px;
 }
 
+/* --- TEXTE (div + textarea) --- */
+.text-inner {
+  width: 100%;
+  height: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font: inherit;
+  line-height: inherit;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  text-decoration: inherit;
+}
+
+/* --- HANDLES --- */
 .resize-handle {
   position: absolute;
   width: 10px;
@@ -187,7 +196,6 @@ watch(
   background: white;
   border: 2px solid #3b82f6;
   border-radius: 50%;
-  z-index: 10;
 }
 
 .resize-handle.right {
@@ -208,31 +216,5 @@ watch(
   right: -6px;
   bottom: -6px;
   cursor: nwse-resize;
-}
-
-.text-editor {
-  position: relative;
-  width: auto;
-  min-width: 1px;
-  min-height: 1px;
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  font: inherit;
-  background: transparent;
-  padding: 0;
-}
-
-.text-mirror {
-  position: absolute;
-  visibility: hidden;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font: inherit;
-  line-height: inherit;
-  padding: 0;
-  width: auto;
-  max-width: none;
 }
 </style>

@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import type { WidgetModel } from '../core/models/WidgetModel'
-import { editorStore } from '../stores'
-import TextComponent from './Components/TextComponent.vue'
+import type { WidgetModel } from '../../core/models/WidgetModel'
+import { editorStore } from '../../stores'
+import TextAssistant from '../assistants/text/TextAssistant.vue'
+import ToolBarAssistant from '../assistants/ToolBarAssistant.vue'
+import TextComponent from '../components/TextComponent.vue'
+import { selectedComponent } from '../../stores/Selectors'
+
+import { computed } from 'vue'
 
 const { currentPage, selectComponent } = editorStore
+
+const isTextComponentSelected = computed(() => selectedComponent.value?.type === 'text')
 </script>
 
 <template>
   <div class="canvas">
+    <tool-bar-assistant>
+      <template v-if="isTextComponentSelected">
+        <text-assistant />
+      </template>
+    </tool-bar-assistant>
     <div
       v-if="currentPage"
       class="page"
@@ -42,7 +54,10 @@ function resolveComponent(node: WidgetModel) {
 <style scoped>
 .canvas {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  gap: 20px;
   padding: 20px;
   background: #f5f5f5;
 }
