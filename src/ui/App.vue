@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import EditorCanvas from './EditorCanvas.vue'
-import { editorStore } from '../stores'
-import { Button } from 'primevue'
+import EditorCanvas from './workspace/EditorCanvas.vue'
+import NavBar from './workspace/NavBar.vue'
 </script>
 
 <template>
-  <Button label="Ajouter un texte" @click="editorStore.addWidget('text')" />
-
+  <NavBar />
   <EditorCanvas />
 </template>
