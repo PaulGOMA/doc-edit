@@ -11,17 +11,18 @@ export class TextWidget implements NodeFactory {
       type: 'text',
       x: 0,
       y: 0,
-      width: 150,
-      height: 40,
+      width: 75,
+      height: 20,
       props: {
         text: 'New text',
         fontSize: 16,
         fontWeight: 'normal',
-        fontStyle: 'regular',
+        fontStyle: 'normal',
         fontFamily: 'Arial',
-        lineHeight: 12,
+        lineHeight: 'normal',
         textAlign: 'left',
         color: '#000000',
+        textDecoration: 'none',
       },
     }
   }
