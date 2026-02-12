@@ -123,7 +123,7 @@ function toggleDecoration() {
   gap: 0.75rem;
   width: fit-content;
   height: fit-content;
-  margin: 0.5rem;
+  margin: 0.0125rem;
   padding: 0;
 }
 
