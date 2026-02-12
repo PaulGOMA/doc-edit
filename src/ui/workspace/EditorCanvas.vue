@@ -1,25 +1,27 @@
 <script setup lang="ts">
 import type { WidgetModel } from '../../core/models/WidgetModel'
 import { editorStore } from '../../stores'
-import TextAssistant from '../assistants/text/TextAssistant.vue'
-import ToolBarAssistant from '../assistants/ToolBarAssistant.vue'
-import TextComponent from '../components/TextComponent.vue'
-import { selectedComponent } from '../../stores/Selectors'
 
-import { computed } from 'vue'
+import NodeComponent from '../components/NodeComponent.vue'
+import TextComponent from '../components/TextComponent.vue'
+import ImageComponent from '../components/ImageComponent.vue' // futur widget
 
 const { currentPage, selectComponent } = editorStore
 
-const isTextComponentSelected = computed(() => selectedComponent.value?.type === 'text')
+function resolvePresenter(node: WidgetModel) {
+  switch (node.type) {
+    case 'text':
+      return TextComponent
+    case 'image':
+      return ImageComponent
+    default:
+      return null
+  }
+}
 </script>
 
 <template>
   <div class="canvas">
-    <tool-bar-assistant>
-      <template v-if="isTextComponentSelected">
-        <text-assistant />
-      </template>
-    </tool-bar-assistant>
     <div
       v-if="currentPage"
       class="page"
@@ -28,28 +30,26 @@ const isTextComponentSelected = computed(() => selectedComponent.value?.type ===
         height: currentPage.height + 'px',
       }"
     >
-      <!-- Render all components -->
-      <component
+      <!-- Render all widgets -->
+      <NodeComponent
         v-for="node in currentPage.widgets"
         :key="node.id"
-        :is="resolveComponent(node)"
-        :node="node as any"
+        :widget="node"
         @click.stop="selectComponent(node.id)"
-      />
+      >
+        <template #default="{ isEditing, enableEdit, disableEdit }">
+          <component
+            :is="resolvePresenter(node)"
+            :node="node"
+            :isEditing="isEditing"
+            @startEdit="enableEdit"
+            @stopEdit="disableEdit"
+          />
+        </template>
+      </NodeComponent>
     </div>
   </div>
 </template>
-
-<script lang="ts">
-function resolveComponent(node: WidgetModel) {
-  switch (node.type) {
-    case 'text':
-      return TextComponent
-    default:
-      return null
-  }
-}
-</script>
 
 <style scoped>
 .canvas {
