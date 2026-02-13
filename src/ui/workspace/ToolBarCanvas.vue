@@ -1,6 +1,19 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Toolbar, Button } from 'primevue'
 import { editorStore } from '../../stores'
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function onFileSelected(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    editorStore.addWidget('image', reader.result as string)
+  }
+  reader.readAsDataURL(file)
+}
 </script>
 
 <template>
@@ -36,6 +49,15 @@ import { editorStore } from '../../stores'
           icon-pos="top"
           variant="outlined"
           severity="secondary"
+          @click="fileInput?.click()"
+        />
+
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="onFileSelected"
         />
 
         <Button

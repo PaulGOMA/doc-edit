@@ -5,6 +5,7 @@ import { editorStore } from '../../stores'
 import NodeComponent from '../components/NodeComponent.vue'
 import TextComponent from '../components/TextComponent.vue'
 import ImageComponent from '../components/ImageComponent.vue' // futur widget
+import PresenterRenderer from '../presenter/PresenterRenderer.vue'
 
 const { currentPage, selectComponent } = editorStore
 
@@ -38,12 +39,11 @@ function resolvePresenter(node: WidgetModel) {
         @click.stop="selectComponent(node.id)"
       >
         <template #default="{ isEditing, enableEdit, disableEdit }">
-          <component
-            :is="resolvePresenter(node)"
+          <presenter-renderer
             :node="node"
             :isEditing="isEditing"
-            @startEdit="enableEdit"
-            @stopEdit="disableEdit"
+            :onStartEdit="enableEdit"
+            :onStopEdit="disableEdit"
           />
         </template>
       </NodeComponent>
