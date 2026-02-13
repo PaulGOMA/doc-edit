@@ -6,11 +6,11 @@ import { WidgetFactory } from '../core/node_factory/WidgetFactory'
 /**
  * Creates and adds a new widget to the current page.
  */
-export function addWidget(type: WidgetType) {
+export function addWidget(type: WidgetType, ...args: any[]) {
   const create = WidgetFactory[type]
   if (!create) throw new Error(`Unknown widget type: ${type}`)
 
-  const widget = create() // ← NOUVEAU widget à chaque appel
+  const widget = create(...args) // ← NOUVEAU widget à chaque appel
 
   currentPage.value?.widgets.push(widget)
   editorState.selectedComponentId = widget.id

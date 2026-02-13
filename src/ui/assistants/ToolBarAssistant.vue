@@ -1,6 +1,20 @@
+<script setup lang="ts">
+import type { Component } from 'vue'
+import type { WidgetType } from '../../core/models/WidgetModel'
+import TextAssistant from './text/TextAssistant.vue'
+import ImageAssistant from './ImageAssistant.vue'
+
+const props = defineProps<{ type: WidgetType }>()
+
+const assistant: Record<WidgetType, Component> = {
+  text: TextAssistant,
+  image: ImageAssistant,
+}
+</script>
+
 <template>
   <div class="toolbar-assistant-container">
-    <slot></slot>
+    <component :is="assistant[props.type]" />
   </div>
 </template>
 
